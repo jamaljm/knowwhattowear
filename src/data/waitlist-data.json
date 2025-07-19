@@ -1,0 +1,173 @@
+{
+  "hero": {
+    "badge": {
+      "text": "Beyond Artificial",
+      "icon": "Clock"
+    },
+    "title": "Early Access to\nGame-Changing AI",
+    "subtitle": "Unlock exclusive early access to groundbreaking AI. Subscribe now and stay ahead of the future!",
+    "cta": {
+      "text": "Subscribe",
+      "placeholder": "Your Email",
+      "icon": "ArrowRight"
+    },
+    "trust": {
+      "text": "Trusted by 1,000+ early adopters",
+      "avatars": [
+        "/profile/1 (1).svg",
+        "/profile/1 (2).svg",
+        "/profile/1 (3).svg"
+      ]
+    }
+  },
+  "features": {
+    "items": [
+      {
+        "title": "Intelligent Chat Bot",
+        "icon": "MessageSquare"
+      },
+      {
+        "title": "Predictive Analytics",
+        "icon": "TrendingUp"
+      },
+      {
+        "title": "Seamless Integration",
+        "icon": "Zap"
+      }
+    ]
+  },
+  "about": {
+    "badge": {
+      "text": "Beyond Artificial",
+      "icon": "Clock"
+    },
+    "headline": {
+      "parts": [
+        { "text": "Experience ", "emphasis": false },
+        { "text": "AI", "emphasis": true },
+        {
+          "text": " that automates tasks, enhances productivity, and delivers intelligent insights",
+          "emphasis": false
+        },
+        {
+          "text": " – all seamlessly integrated into your workflow.",
+          "emphasis": true
+        }
+      ]
+    },
+    "subheadline": {
+      "parts": [
+        { "text": "Designed to evolve, ", "emphasis": false },
+        {
+          "text": "it helps you work smarter, innovate faster, and stay ahead of the innovation curve.",
+          "emphasis": true
+        }
+      ]
+    },
+    "infoCards": [
+      {
+        "label": "Beta Access:",
+        "value": "Q3, 2025",
+        "icon": "Calendar"
+      },
+      {
+        "label": "AI Type:",
+        "value": "Adaptive, Self-Learning",
+        "icon": "Brain"
+      },
+      {
+        "label": "Technology:",
+        "value": "Machine Learning & NLP",
+        "icon": "Cpu"
+      }
+    ],
+    "image": "/waitlist-image.jpeg"
+  },
+  "faq": {
+    "badge": {
+      "text": "FAQ",
+      "icon": "HelpCircle"
+    },
+    "items": [
+      {
+        "question": "When will the product be available?",
+        "answer": "We're planning to launch in Q3 2025. Waitlist members will be notified first and get exclusive early access."
+      },
+      {
+        "question": "What makes this AI different?",
+        "answer": "Our AI is adaptive and self-learning, designed to evolve with your workflow and provide personalized insights that improve over time."
+      },
+      {
+        "question": "Will there be a free version?",
+        "answer": "Yes! We'll offer both free and premium tiers. Early waitlist members will receive special pricing and extended trial periods."
+      },
+      {
+        "question": "How do I get priority access?",
+        "answer": "Simply join our waitlist and you'll be among the first to receive access. You can also refer friends to move up in the queue."
+      },
+      {
+        "question": "What industries does it support?",
+        "answer": "Our AI is designed to work across multiple industries including tech, healthcare, finance, and creative fields with customizable workflows."
+      },
+      {
+        "question": "Is my data secure?",
+        "answer": "Absolutely. We use enterprise-grade security with end-to-end encryption and comply with all major data protection regulations."
+      }
+    ]
+  },
+  "footer": {
+    "logo": "L",
+    "title": "Stay Connected!",
+    "subtitle": "Message Us & Follow",
+    "description": "Send us a message and follow us for the latest updates, news, and exclusive insights!",
+    "cta": {
+      "primary": {
+        "text": "Write Us",
+        "icon": "ArrowRight"
+      },
+      "secondary": {
+        "text": "Join Waitlist",
+        "icon": "Plus"
+      }
+    },
+    "social": {
+      "title": "Follow Us",
+      "platforms": [
+        {
+          "name": "GitHub",
+          "icon": "/icon/github.png",
+          "url": "https://github.com"
+        },
+        {
+          "name": "LinkedIn",
+          "icon": "/icon/linkedin.png",
+          "url": "https://linkedin.com"
+        },
+        {
+          "name": "X",
+          "icon": "/icon/twitter.png",
+          "url": "https://twitter.com"
+        },
+        {
+          "name": "Youtube",
+          "icon": "/icon/youtube.png",
+          "url": "https://youtube.com"
+        },
+        {
+          "name": "dribbble",
+          "icon": "/icon/dribbble.png",
+          "url": "https://dribbble.com"
+        }
+      ]
+    },
+    "bottom": {
+      "copyright": "© 2025, Evolux",
+      "backToTop": "Back to Top"
+    }
+  },
+  "design": {
+    "primaryColor": "#2a2a2a",
+    "theme": "adaptive",
+    "logo": "L"
+  }
+}
