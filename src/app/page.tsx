@@ -10,23 +10,30 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-white text-black">
+    <div className="min-h-screen bg-gray-100 text-gray-900">
       {/* Navigation */}
-      <nav className="border-b border-gray-200 px-6 py-4">
+      <nav className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-black rounded-full"></div>
-            <span className="text-xl font-bold">KnowWhatToWear</span>
+            <Image 
+              src="/logo.png" 
+              alt="KnowWhatToWear" 
+              width={32} 
+              height={32}
+              className="w-8 h-8"
+            />
+            <span className="text-xl font-semibold text-gray-900">KnowWhatToWear</span>
           </div>
           <div className="flex items-center space-x-4">
             <Link href="/login">
-              <Button className="text-black hover:bg-gray-100">Sign In</Button>
+              <Button variant="outline" className="text-gray-900 border-gray-300 hover:bg-gray-50">Sign In</Button>
             </Link>
             <Link href="/login">
-              <Button className="bg-black text-white hover:bg-gray-800">
+              <Button className="bg-gray-900 text-white hover:bg-gray-800">
                 Get Started
               </Button>
             </Link>

@@ -12,6 +12,7 @@ import {
 import { supabase } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -92,7 +93,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-6">
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-6">
       <div className="w-full max-w-md">
         {/* Logo/Header */}
         <div className="text-center mb-8">
@@ -100,36 +101,42 @@ export default function LoginPage() {
             href="/"
             className="flex items-center justify-center space-x-2 mb-4"
           >
-            <div className="w-8 h-8 bg-black rounded-full"></div>
-            <span className="text-xl font-bold text-black">KnowWhatToWear</span>
+            <Image 
+              src="/logo.png" 
+              alt="KnowWhatToWear" 
+              width={32} 
+              height={32}
+              className="w-8 h-8"
+            />
+            <span className="text-2xl font-semibold text-gray-900">KnowWhatToWear</span>
           </Link>
-          <h1 className="text-2xl font-bold text-black">
+          <h1 className="text-2xl font-semibold text-gray-900">
             {isLogin ? "Welcome back" : "Create your account"}
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-gray-500 mt-2">
             {isLogin
               ? "Sign in to your wardrobe assistant"
               : "Start organizing your perfect wardrobe"}
           </p>
         </div>
 
-        <Card className="border border-gray-200 shadow-sm">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-center">
+        <div className="bg-white rounded-xl p-8 shadow-sm">
+          <div className="text-center mb-6">
+            <h2 className="text-lg font-medium text-gray-900">
               {isLogin ? "Sign in" : "Sign up"}
-            </CardTitle>
-            <CardDescription className="text-center">
+            </h2>
+            <p className="text-gray-500 text-sm mt-1">
               {isLogin
                 ? "Enter your credentials to access your account"
                 : "Create an account to get started"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+            </p>
+          </div>
+          <div className="space-y-4">
             {/* Google Auth Button */}
             <Button
               onClick={handleGoogleAuth}
               disabled={loading}
-              className="w-full border-gray-300 hover:bg-gray-50"
+              className="w-full bg-gray-900 text-white hover:bg-gray-800"
             >
               <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
                 <path
@@ -211,7 +218,7 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-black text-white hover:bg-gray-800 disabled:opacity-50"
+                className="w-full bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50"
               >
                 {loading ? (
                   <div className="flex items-center">
@@ -245,12 +252,12 @@ export default function LoginPage() {
 
             {/* Back to landing page */}
             <div className="text-center">
-              <Link href="/" className="text-sm text-gray-500 hover:text-black">
+              <Link href="/" className="text-sm text-gray-500 hover:text-gray-900">
                 ← Back to home
               </Link>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

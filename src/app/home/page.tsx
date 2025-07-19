@@ -20,6 +20,7 @@ import { uploadToSupabase } from "@/utils/upload";
 import { processImage } from "@/components/process_image/action";
 import { searchWardrobe } from "@/components/wardrobe_search/action";
 import ReactMarkdown from "react-markdown";
+import Image from "next/image";
 
 interface WardrobeItem {
   id: string;
@@ -31,7 +32,7 @@ interface WardrobeItem {
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<
-    "wardrobe" | "upload" | "profile"
+    "wardrobe" | "profile"
   >("wardrobe");
   const [wardrobeItems, setWardrobeItems] = useState<WardrobeItem[]>([]);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -242,182 +243,262 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-100">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+      <header className="bg-white shadow-sm">
+        <div className="max-w-6xl mx-auto px-8 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-black rounded-full"></div>
-              <span className="text-xl font-bold">KnowWhatToWear</span>
+            <div className="flex items-center space-x-3">
+              <span className="text-2xl font-semibold text-gray-900">KnowWhatToWear</span>
             </div>
             <div className="flex items-center space-x-4">
-              <Avatar>
+              <Avatar className="h-9 w-9">
                 <AvatarImage src={userData?.user_metadata?.avatar_url} />
-                <AvatarFallback className="bg-black text-white">
+                <AvatarFallback className="bg-gray-700 text-white text-sm">
                   {userData?.email?.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <Button onClick={logout}>Sign Out</Button>
+              <Button 
+                onClick={logout} 
+                variant="outline" 
+                className="bg-gray-900 text-white border-gray-900 hover:bg-gray-800 rounded-full px-6"
+              >
+                Sign Out
+              </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Navigation Tabs */}
-        <div className="flex space-x-1 mb-8 bg-white rounded-lg p-1 border border-gray-200 w-fit">
-          {[
-            { id: "wardrobe", label: "My Wardrobe" },
-            { id: "upload", label: "Add Items" },
-            { id: "profile", label: "Profile" },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === tab.id
-                  ? "bg-black text-white"
-                  : "text-gray-600 hover:text-black hover:bg-gray-100"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+      <div className="flex min-h-[calc(100vh-120px)]">
+        {/* Sidebar */}
+        <div className="w-64 bg-white border-r border-gray-200 flex-shrink-0">
+          <div className="p-6">
+            {/* Logo */}
+            <div className="mb-8 text-center">
+              <Image 
+                src="/logo.png" 
+                alt="KnowWhatToWear" 
+                width={120} 
+                height={120}
+                className="mx-auto mb-4"
+              />
+            </div>
+            
+            <nav className="space-y-2">
+              {[
+                { id: "wardrobe", label: "My Closet" },
+                { id: "profile", label: "Settings" },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === tab.id
+                      ? "bg-gray-100 text-gray-900"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
+          </div>
         </div>
 
-        {/* Wardrobe Tab */}
-        {activeTab === "wardrobe" && (
-          <div>
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-black mb-2">
-                My Wardrobe
-              </h1>
-              <p className="text-gray-600">
-                {wardrobeItems.length} items in your collection
-              </p>
-            </div>
+        {/* Main Content */}
+        <div className="flex-1 bg-gray-50">
+          <div className="p-8">
 
-            {/* AI Search */}
-            {wardrobeItems.length > 0 && (
-              <div className="mb-6">
-                <Card className="border border-gray-200">
-                  <CardContent className="p-4">
-                    <h3 className="font-semibold text-black mb-3">
-                      Ask AI about your wardrobe
-                    </h3>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="e.g., 'What should I wear for a date?', 'Show me casual outfits', 'What goes with my blue shirt?'"
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black"
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            handleWardrobeSearch();
-                          }
-                        }}
-                      />
-                      <Button
-                        onClick={handleWardrobeSearch}
-                        disabled={!searchQuery.trim() || isLoading}
-                        className="bg-black text-white hover:bg-gray-800 disabled:opacity-50"
-                      >
-                        {isLoading ? "Searching..." : "Search"}
-                      </Button>
-                    </div>
+              {/* Wardrobe Tab */}
+              {activeTab === "wardrobe" && (
+                <div className="space-y-6">
+                  {/* Header */}
+                  <div className="text-center bg-white rounded-xl p-8 shadow-sm">
+                    <h1 className="text-3xl font-semibold text-gray-900 mb-2">
+                      Search Your Closet
+                    </h1>
+                    <p className="text-gray-500 text-sm mb-6">
+                      {wardrobeItems.length} items in your collection
+                    </p>
                     
-                    {searchResult && (
-                      <div className="mt-4 p-3 bg-gray-50 rounded-md">
-                        <h4 className="font-medium text-black mb-2">AI Suggestions:</h4>
-                        <div className="text-sm text-gray-700 prose prose-sm max-w-none">
-                          <ReactMarkdown>{searchResult}</ReactMarkdown>
+                    {/* Search Bar */}
+                    {wardrobeItems.length > 0 && (
+                      <div className="max-w-lg mx-auto">
+                        <div className="flex gap-3">
+                          <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Ask about your wardrobe..."
+                            className="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent text-gray-900 placeholder-gray-400"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                handleWardrobeSearch();
+                              }
+                            }}
+                          />
+                          <Button
+                            onClick={handleWardrobeSearch}
+                            disabled={!searchQuery.trim() || isLoading}
+                            className="bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50 rounded-lg px-6"
+                          >
+                            {isLoading ? "Searching..." : "Search"}
+                          </Button>
                         </div>
+                        
+                        {searchResult && (
+                          <div className="mt-4 p-4 bg-gray-50 rounded-lg text-left">
+                            <div className="text-gray-800 prose prose-sm max-w-none">
+                              <ReactMarkdown>{searchResult}</ReactMarkdown>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-
-            {wardrobeItems.length === 0 ? (
-              <Card className="border border-gray-200">
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <div className="w-16 h-16 bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
-                    <svg
-                      className="w-8 h-8 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2M7 4h10M7 4l-2 16h14l-2-16"
-                      />
-                    </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-black mb-2">
-                    No items yet
-                  </h3>
-                  <p className="text-gray-600 text-center mb-4">
-                    Start building your digital wardrobe by adding your first
-                    clothing item.
-                  </p>
-                  <Button
-                    onClick={() => setActiveTab("upload")}
-                    className="bg-black text-white hover:bg-gray-800"
-                  >
-                    Add Your First Item
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {wardrobeItems.map((item) => (
-                  <Card
-                    key={item.id}
-                    className="border border-gray-200 hover:shadow-lg transition-shadow"
-                  >
-                    <div className="relative">
-                      <img
-                        src={item.image_url}
-                        alt={item.name}
-                        className="w-full h-48 object-cover rounded-t-lg"
-                      />
-                      <div className="absolute top-2 right-2 flex gap-1">
-                        <button
-                          onClick={() => handleEditItem(item)}
-                          className="p-2 bg-white rounded-full shadow-sm hover:shadow-md"
-                        >
-                          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => handleDeleteItem(item)}
-                          className="p-2 bg-white rounded-full shadow-sm hover:shadow-md"
-                        >
-                          <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
+
+                  {/* Closet Grid */}
+                  {wardrobeItems.length === 0 ? (
+                    <div className="bg-white rounded-xl p-12 shadow-sm text-center">
+                      <h3 className="text-xl font-medium text-gray-900 mb-3">
+                        Your closet is empty
+                      </h3>
+                      <p className="text-gray-500 mb-6">
+                        Start building your digital wardrobe by adding some clothes
+                      </p>
+                      <Button
+                        onClick={() => document.getElementById('imageInput')?.click()}
+                        className="bg-gray-900 text-white hover:bg-gray-800 rounded-lg px-8 py-3"
+                      >
+                        Add Your First Item
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="bg-white rounded-xl p-6 shadow-sm">
+                      <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-lg font-medium text-gray-900">Closet</h2>
+                        <div className="flex items-center gap-4">
+                          <div className="text-sm text-gray-500">{wardrobeItems.length} items</div>
+                          <Button
+                            onClick={() => document.getElementById('imageInput')?.click()}
+                            className="bg-gray-900 text-white hover:bg-gray-800 rounded-lg px-4 py-2 text-sm"
+                          >
+                            Add Item
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                        {wardrobeItems.map((item) => (
+                          <div
+                            key={item.id}
+                            className="group bg-gray-50 rounded-lg overflow-hidden hover:shadow-md transition-all duration-200"
+                          >
+                            <div className="relative aspect-square">
+                              <img
+                                src={item.image_url}
+                                alt="Wardrobe item"
+                                className="w-full h-full object-cover"
+                              />
+                              <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={() => handleEditItem(item)}
+                                  className="p-1.5 bg-white/90 backdrop-blur-sm rounded-full shadow-sm hover:bg-white"
+                                >
+                                  <svg className="w-3 h-3 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                  </svg>
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteItem(item)}
+                                  className="p-1.5 bg-white/90 backdrop-blur-sm rounded-full shadow-sm hover:bg-white"
+                                >
+                                  <svg className="w-3 h-3 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+                            <div className="p-2">
+                              <div className="text-xs text-gray-600 line-clamp-2">
+                                <ReactMarkdown>{item.description}</ReactMarkdown>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                    <CardContent className="p-4">
-                      <div className="text-sm text-gray-700 mb-2 prose prose-sm max-w-none">
-                        <ReactMarkdown>{item.description}</ReactMarkdown>
+                  )}
+
+                  {/* Hidden File Input */}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                    id="imageInput"
+                  />
+
+                  {/* Upload Modal */}
+                  {(selectedImage || imagePreview) && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                      <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+                        <h3 className="text-lg font-semibold mb-4">Add New Item</h3>
+                        <div className="space-y-4">
+                          {imagePreview && (
+                            <div className="relative">
+                              <img
+                                src={imagePreview}
+                                alt="Preview"
+                                className="w-full h-48 object-cover rounded-lg"
+                              />
+                              <button
+                                onClick={() => {
+                                  setSelectedImage(null);
+                                  setImagePreview(null);
+                                }}
+                                className="absolute top-2 right-2 p-1 bg-black text-white rounded-full hover:bg-gray-800"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </div>
+                          )}
+
+                          {isLoading && (
+                            <div className="space-y-2">
+                              <div className="flex justify-between text-sm">
+                                <span>Processing...</span>
+                                <span>{uploadProgress}%</span>
+                              </div>
+                              <Progress value={uploadProgress} className="w-full" />
+                            </div>
+                          )}
+
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={() => {
+                                setSelectedImage(null);
+                                setImagePreview(null);
+                              }}
+                              variant="outline"
+                              className="flex-1"
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              onClick={handleUpload}
+                              disabled={!selectedImage || isLoading}
+                              className="flex-1 bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50"
+                            >
+                              {isLoading ? "Processing..." : "Add to Closet"}
+                            </Button>
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-xs text-gray-500">
-                        Added {new Date(item.created_at).toLocaleDateString()}
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
+                    </div>
+                  )}
 
             {/* Edit Modal */}
             {editingItem && (
@@ -455,176 +536,59 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
+                )}
+              </div>
             )}
-          </div>
-        )}
 
-        {/* Upload Tab */}
-        {activeTab === "upload" && (
-          <div>
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-black mb-2">
-                Add New Item
-              </h1>
-              <p className="text-gray-600">
-                Upload photos of your clothes for AI-powered tagging
-              </p>
-            </div>
-
-            <Card className="border border-gray-200 max-w-2xl">
-              <CardContent className="p-6">
-                <div className="space-y-6">
-                  <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-8 hover:border-gray-400 transition-colors">
-                    {imagePreview ? (
-                      <div className="relative w-full max-w-sm">
-                        <img
-                          src={imagePreview}
-                          alt="Preview"
-                          className="rounded-lg object-contain w-full h-64"
-                        />
-                        <button
-                          onClick={() => {
-                            setSelectedImage(null);
-                            setImagePreview(null);
-                          }}
-                          className="absolute top-2 right-2 p-1 bg-black text-white rounded-full hover:bg-gray-800"
-                        >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="text-center">
-                        <svg
-                          className="w-12 h-12 text-gray-400 mx-auto mb-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2M7 4h10M7 4l-2 16h14l-2-16"
-                          />
-                        </svg>
-                        <p className="text-gray-500 mb-2">
-                          Drag and drop or click to upload
-                        </p>
-                        <p className="text-sm text-gray-400">
-                          PNG, JPG up to 10MB
-                        </p>
-                      </div>
-                    )}
-
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
-                      id="imageInput"
-                    />
-                    {!imagePreview && (
-                      <Button 
-                        className="mt-4 bg-black text-white hover:bg-gray-800"
-                        onClick={() => document.getElementById('imageInput')?.click()}
-                        type="button"
-                      >
-                        Choose File
-                      </Button>
-                    )}
-                  </div>
-
-                  {isLoading && (
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Processing...</span>
-                        <span>{uploadProgress}%</span>
-                      </div>
-                      <Progress value={uploadProgress} className="w-full" />
-                    </div>
-                  )}
-
-                  <Button
-                    onClick={handleUpload}
-                    disabled={!selectedImage || isLoading}
-                    className="w-full bg-black text-white hover:bg-gray-800 disabled:opacity-50"
-                  >
-                    {isLoading ? "Processing..." : "Add to Wardrobe"}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
 
         {/* Profile Tab */}
         {activeTab === "profile" && (
-          <div>
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-black mb-2">
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl p-8 shadow-sm">
+              <h1 className="text-3xl font-semibold text-gray-900 mb-2">
                 Profile Settings
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-500">
                 Manage your account and preferences
               </p>
             </div>
 
-            <div className="grid lg:grid-cols-2 gap-8">
-              <Card className="border border-gray-200">
-                <CardHeader>
-                  <CardTitle>Account Information</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center space-x-4">
-                    <Avatar className="w-20 h-20">
-                      <AvatarImage src={userData?.user_metadata?.avatar_url} />
-                      <AvatarFallback className="bg-black text-white text-lg">
-                        {userData?.email?.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="font-semibold">{userData?.email}</h3>
-                      <p className="text-sm text-gray-600">
-                        Member since{" "}
-                        {new Date(
-                          userData?.created_at || ""
-                        ).toLocaleDateString()}
-                      </p>
-                    </div>
+            <div className="grid lg:grid-cols-2 gap-6">
+              <div className="bg-white rounded-xl p-6 shadow-sm">
+                <h2 className="text-lg font-medium text-gray-900 mb-4">Account Information</h2>
+                <div className="flex items-center space-x-4">
+                  <Avatar className="w-16 h-16">
+                    <AvatarImage src={userData?.user_metadata?.avatar_url} />
+                    <AvatarFallback className="bg-gray-700 text-white text-lg">
+                      {userData?.email?.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h3 className="font-medium text-gray-900">{userData?.email}</h3>
+                    <p className="text-sm text-gray-500">
+                      Member since{" "}
+                      {new Date(
+                        userData?.created_at || ""
+                      ).toLocaleDateString()}
+                    </p>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
-              <Card className="border border-gray-200">
-                <CardHeader>
-                  <CardTitle>Wardrobe Stats</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="text-center p-4 bg-gray-50 rounded-lg">
-                      <div className="text-2xl font-bold text-black">
-                        {wardrobeItems.length}
-                      </div>
-                      <div className="text-sm text-gray-600">Total Items</div>
-                    </div>
+              <div className="bg-white rounded-xl p-6 shadow-sm">
+                <h2 className="text-lg font-medium text-gray-900 mb-4">Wardrobe Stats</h2>
+                <div className="text-center p-6 bg-gray-50 rounded-lg">
+                  <div className="text-3xl font-semibold text-gray-900">
+                    {wardrobeItems.length}
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="text-sm text-gray-500 mt-1">Total Items</div>
+                </div>
+              </div>
             </div>
           </div>
         )}
+          </div>
+        </div>
       </div>
     </div>
   );
