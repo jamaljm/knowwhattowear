@@ -42,10 +42,14 @@ export function CommonContextProvider({
    useEffect(() => {
     const fetchData = async () => {
       try {
+        console.log("CommonContext: Fetching user data...");
         const { data, error } = await supabase.auth.getUser();
+        console.log("CommonContext: User data response:", data);
+        console.log("CommonContext: Error:", error);
         setUser(data.user);
+        console.log("CommonContext: User set to:", data.user);
       } catch (error) {
-        console.error("Error:", error);
+        console.error("CommonContext: Error:", error);
       }
     };
 

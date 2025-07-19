@@ -17,47 +17,31 @@ import { useRouter } from "next/navigation";
 import { CommonContext } from "@/Common_context";
 import { useContext } from "react";
 import { uploadToSupabase } from "@/utils/upload";
+import { processImage } from "@/components/process_image/action";
+import { searchWardrobe } from "@/components/wardrobe_search/action";
+import ReactMarkdown from "react-markdown";
 
 interface WardrobeItem {
   id: string;
-  name: string;
+  user_id: string;
   description: string;
   image_url: string;
-  clothing_type: string;
-  primary_color: string;
-  secondary_colors: string[];
-  fabric_type: string;
-  brand: string;
-  size: string;
-  occasions: string[];
-  tags: string[];
-  is_favorite: boolean;
   created_at: string;
-}
-
-interface OutfitRecommendation {
-  id: string;
-  outfit_name: string;
-  description: string;
-  weather_condition: string;
-  temperature_range: string;
-  items: WardrobeItem[];
 }
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<
-    "wardrobe" | "upload" | "recommendations" | "profile"
+    "wardrobe" | "upload" | "profile"
   >("wardrobe");
   const [wardrobeItems, setWardrobeItems] = useState<WardrobeItem[]>([]);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [recommendations, setRecommendations] = useState<
-    OutfitRecommendation[]
-  >([]);
-  const [selectedOccasion, setSelectedOccasion] = useState("");
-  const [selectedWeather, setSelectedWeather] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResult, setSearchResult] = useState("");
+  const [editingItem, setEditingItem] = useState<WardrobeItem | null>(null);
+  const [editDescription, setEditDescription] = useState("");
 
   const { userData, logout } = useContext(CommonContext);
   const router = useRouter();
@@ -110,41 +94,48 @@ export default function HomePage() {
     }
   };
 
-  const analyzeClothing = async (imageUrl: string) => {
-    // This would typically call your AI service
-    // For now, return mock analysis
-    return {
-      name: "Clothing Item",
-      description: "AI-analyzed clothing item",
-      clothing_type: "top",
-      primary_color: "black",
-      secondary_colors: [],
-      fabric_type: "cotton",
-      occasions: ["casual"],
-      tags: ["comfortable", "everyday"],
-    };
-  };
 
   const handleUpload = async () => {
-    if (!selectedImage || !userData?.id) return;
+    console.log("Upload started, selectedImage:", selectedImage);
+    console.log("userData:", userData);
+    
+    if (!selectedImage || !userData?.id) {
+      console.log("Missing selectedImage or userData.id");
+      return;
+    }
 
     setIsLoading(true);
     setUploadProgress(0);
 
     try {
       // Upload image to Supabase storage
+      console.log("Starting image upload to Supabase...");
       setUploadProgress(25);
       const imageUrl = await uploadToSupabase(
         selectedImage,
         "wardrobe-images",
         userData.id
       );
+      console.log("Image uploaded successfully:", imageUrl);
 
       // Analyze with AI
+      console.log("Starting AI analysis...");
       setUploadProgress(50);
-      const analysis = await analyzeClothing(imageUrl);
+      
+      // Create FormData with the selected image file
+      const formData = new FormData();
+      formData.append("image", selectedImage);
+      
+      // Process image with AI
+      const aiDescription = await processImage(formData);
+      console.log("AI analysis completed:", aiDescription);
+      
+      const analysis = {
+        description: aiDescription,
+      };
 
       // Save to database
+      console.log("Saving to database...");
       setUploadProgress(75);
       const { data, error } = await supabase
         .from("wardrobe_items")
@@ -152,19 +143,24 @@ export default function HomePage() {
           {
             user_id: userData.id,
             image_url: imageUrl,
-            ...analysis,
+            description: analysis.description,
           },
         ])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Database error:", error);
+        throw error;
+      }
 
+      console.log("Database insert successful:", data);
       setUploadProgress(100);
       setWardrobeItems((prev) => [data, ...prev]);
       setSelectedImage(null);
       setImagePreview(null);
       setActiveTab("wardrobe");
+      console.log("Upload process completed successfully");
     } catch (error) {
       console.error("Error uploading item:", error);
     } finally {
@@ -173,56 +169,75 @@ export default function HomePage() {
     }
   };
 
-  const generateRecommendations = async () => {
-    if (!userData?.id || !selectedOccasion || !selectedWeather) return;
+  const handleWardrobeSearch = async () => {
+    if (!searchQuery.trim() || !userData?.id) return;
 
     setIsLoading(true);
     try {
-      // This would typically call your AI recommendation service
-      // For now, return mock recommendations
-      const mockRecommendations = [
-        {
-          id: "1",
-          outfit_name: "Smart Casual Look",
-          description: "Perfect for the office or casual meeting",
-          weather_condition: selectedWeather,
-          temperature_range: "mild",
-          items: wardrobeItems.slice(0, 3),
-        },
-        {
-          id: "2",
-          outfit_name: "Weekend Comfort",
-          description: "Relaxed and comfortable for weekend activities",
-          weather_condition: selectedWeather,
-          temperature_range: "mild",
-          items: wardrobeItems.slice(1, 4),
-        },
-      ];
-
-      setRecommendations(mockRecommendations);
+      console.log("Starting wardrobe search...");
+      const result = await searchWardrobe(searchQuery, wardrobeItems);
+      setSearchResult(result);
+      console.log("Search completed:", result);
     } catch (error) {
-      console.error("Error generating recommendations:", error);
+      console.error("Error searching wardrobe:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const toggleFavorite = async (itemId: string, currentFavorite: boolean) => {
+  const handleEditItem = (item: WardrobeItem) => {
+    setEditingItem(item);
+    setEditDescription(item.description);
+  };
+
+  const handleUpdateItem = async () => {
+    if (!editingItem || !userData?.id) return;
+
+    setIsLoading(true);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("wardrobe_items")
-        .update({ is_favorite: !currentFavorite })
-        .eq("id", itemId);
+        .update({
+          description: editDescription,
+        })
+        .eq("id", editingItem.id)
+        .select()
+        .single();
 
       if (error) throw error;
 
       setWardrobeItems((prev) =>
-        prev.map((item) =>
-          item.id === itemId ? { ...item, is_favorite: !currentFavorite } : item
-        )
+        prev.map((item) => (item.id === editingItem.id ? data : item))
       );
+      setEditingItem(null);
+      setEditDescription("");
     } catch (error) {
-      console.error("Error toggling favorite:", error);
+      console.error("Error updating item:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteItem = async (item: WardrobeItem) => {
+    if (!userData?.id) return;
+    
+    const confirmDelete = window.confirm(`Are you sure you want to delete this item?`);
+    if (!confirmDelete) return;
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from("wardrobe_items")
+        .delete()
+        .eq("id", item.id);
+
+      if (error) throw error;
+
+      setWardrobeItems((prev) => prev.filter((i) => i.id !== item.id));
+    } catch (error) {
+      console.error("Error deleting item:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -255,7 +270,6 @@ export default function HomePage() {
           {[
             { id: "wardrobe", label: "My Wardrobe" },
             { id: "upload", label: "Add Items" },
-            { id: "recommendations", label: "Get Outfits" },
             { id: "profile", label: "Profile" },
           ].map((tab) => (
             <button
@@ -283,6 +297,49 @@ export default function HomePage() {
                 {wardrobeItems.length} items in your collection
               </p>
             </div>
+
+            {/* AI Search */}
+            {wardrobeItems.length > 0 && (
+              <div className="mb-6">
+                <Card className="border border-gray-200">
+                  <CardContent className="p-4">
+                    <h3 className="font-semibold text-black mb-3">
+                      Ask AI about your wardrobe
+                    </h3>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="e.g., 'What should I wear for a date?', 'Show me casual outfits', 'What goes with my blue shirt?'"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            handleWardrobeSearch();
+                          }
+                        }}
+                      />
+                      <Button
+                        onClick={handleWardrobeSearch}
+                        disabled={!searchQuery.trim() || isLoading}
+                        className="bg-black text-white hover:bg-gray-800 disabled:opacity-50"
+                      >
+                        {isLoading ? "Searching..." : "Search"}
+                      </Button>
+                    </div>
+                    
+                    {searchResult && (
+                      <div className="mt-4 p-3 bg-gray-50 rounded-md">
+                        <h4 className="font-medium text-black mb-2">AI Suggestions:</h4>
+                        <div className="text-sm text-gray-700 prose prose-sm max-w-none">
+                          <ReactMarkdown>{searchResult}</ReactMarkdown>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
 
             {wardrobeItems.length === 0 ? (
               <Card className="border border-gray-200">
@@ -330,63 +387,73 @@ export default function HomePage() {
                         alt={item.name}
                         className="w-full h-48 object-cover rounded-t-lg"
                       />
-                      <button
-                        onClick={() =>
-                          toggleFavorite(item.id, item.is_favorite)
-                        }
-                        className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-sm hover:shadow-md"
-                      >
-                        <svg
-                          className={`w-5 h-5 ${
-                            item.is_favorite
-                              ? "text-red-500 fill-current"
-                              : "text-gray-400"
-                          }`}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                      <div className="absolute top-2 right-2 flex gap-1">
+                        <button
+                          onClick={() => handleEditItem(item)}
+                          className="p-2 bg-white rounded-full shadow-sm hover:shadow-md"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                          />
-                        </svg>
-                      </button>
+                          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteItem(item)}
+                          className="p-2 bg-white rounded-full shadow-sm hover:shadow-md"
+                        >
+                          <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                     <CardContent className="p-4">
-                      <h3 className="font-semibold text-black mb-1">
-                        {item.name}
-                      </h3>
-                      <p className="text-sm text-gray-600 mb-2">
-                        {item.description}
+                      <div className="text-sm text-gray-700 mb-2 prose prose-sm max-w-none">
+                        <ReactMarkdown>{item.description}</ReactMarkdown>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        Added {new Date(item.created_at).toLocaleDateString()}
                       </p>
-                      <div className="flex flex-wrap gap-1 mb-2">
-                        <Badge className="text-xs">{item.clothing_type}</Badge>
-                        <Badge className="text-xs">{item.primary_color}</Badge>
-                        {item.brand && (
-                          <Badge className="text-xs">{item.brand}</Badge>
-                        )}
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {item.tags.slice(0, 2).map((tag, index) => (
-                          <Badge
-                            key={index}
-                            className="bg-gray-100 text-gray-700 text-xs"
-                          >
-                            {tag}
-                          </Badge>
-                        ))}
-                        {item.tags.length > 2 && (
-                          <Badge className="bg-gray-100 text-gray-700 text-xs">
-                            +{item.tags.length - 2}
-                          </Badge>
-                        )}
-                      </div>
                     </CardContent>
                   </Card>
                 ))}
+              </div>
+            )}
+
+            {/* Edit Modal */}
+            {editingItem && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg p-6 w-full max-w-lg mx-4">
+                  <h3 className="text-lg font-semibold mb-4">Edit Item</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Description
+                      </label>
+                      <textarea
+                        value={editDescription}
+                        onChange={(e) => setEditDescription(e.target.value)}
+                        rows={6}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black"
+                        placeholder="Describe the item, colors, style, occasions, etc."
+                      />
+                    </div>
+                    <div className="flex gap-2 justify-end">
+                      <Button
+                        onClick={() => setEditingItem(null)}
+                        className="bg-gray-300 text-gray-700 hover:bg-gray-400"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleUpdateItem}
+                        disabled={isLoading}
+                        className="bg-black text-white hover:bg-gray-800"
+                      >
+                        {isLoading ? "Saving..." : "Save"}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -469,11 +536,13 @@ export default function HomePage() {
                       id="imageInput"
                     />
                     {!imagePreview && (
-                      <label htmlFor="imageInput">
-                        <Button className="mt-4 bg-black text-white hover:bg-gray-800">
-                          Choose File
-                        </Button>
-                      </label>
+                      <Button 
+                        className="mt-4 bg-black text-white hover:bg-gray-800"
+                        onClick={() => document.getElementById('imageInput')?.click()}
+                        type="button"
+                      >
+                        Choose File
+                      </Button>
                     )}
                   </div>
 
@@ -497,149 +566,6 @@ export default function HomePage() {
                 </div>
               </CardContent>
             </Card>
-          </div>
-        )}
-
-        {/* Recommendations Tab */}
-        {activeTab === "recommendations" && (
-          <div>
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-black mb-2">
-                Outfit Recommendations
-              </h1>
-              <p className="text-gray-600">
-                Get AI-powered outfit suggestions for any occasion
-              </p>
-            </div>
-
-            <div className="grid lg:grid-cols-3 gap-8">
-              {/* Filters */}
-              <div className="lg:col-span-1">
-                <Card className="border border-gray-200">
-                  <CardHeader>
-                    <CardTitle>Tell us about your day</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Occasion
-                      </label>
-                      <select
-                        value={selectedOccasion}
-                        onChange={(e) => setSelectedOccasion(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black"
-                      >
-                        <option value="">Select occasion</option>
-                        <option value="work">Work</option>
-                        <option value="casual">Casual</option>
-                        <option value="formal">Formal</option>
-                        <option value="party">Party</option>
-                        <option value="sports">Sports</option>
-                        <option value="date">Date</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Weather
-                      </label>
-                      <select
-                        value={selectedWeather}
-                        onChange={(e) => setSelectedWeather(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black"
-                      >
-                        <option value="">Select weather</option>
-                        <option value="sunny">Sunny</option>
-                        <option value="cloudy">Cloudy</option>
-                        <option value="rainy">Rainy</option>
-                        <option value="snowy">Snowy</option>
-                        <option value="windy">Windy</option>
-                      </select>
-                    </div>
-
-                    <Button
-                      onClick={generateRecommendations}
-                      disabled={
-                        !selectedOccasion || !selectedWeather || isLoading
-                      }
-                      className="w-full bg-black text-white hover:bg-gray-800 disabled:opacity-50"
-                    >
-                      {isLoading ? "Generating..." : "Get Recommendations"}
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Recommendations */}
-              <div className="lg:col-span-2">
-                {recommendations.length === 0 ? (
-                  <Card className="border border-gray-200">
-                    <CardContent className="flex flex-col items-center justify-center py-12">
-                      <div className="w-16 h-16 bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
-                        <svg
-                          className="w-8 h-8 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                          />
-                        </svg>
-                      </div>
-                      <h3 className="text-lg font-semibold text-black mb-2">
-                        No recommendations yet
-                      </h3>
-                      <p className="text-gray-600 text-center">
-                        Select an occasion and weather to get personalized
-                        outfit recommendations.
-                      </p>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="space-y-6">
-                    {recommendations.map((outfit) => (
-                      <Card key={outfit.id} className="border border-gray-200">
-                        <CardHeader>
-                          <CardTitle>{outfit.outfit_name}</CardTitle>
-                          <CardDescription>
-                            {outfit.description}
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="grid grid-cols-3 gap-4">
-                            {outfit.items.slice(0, 3).map((item) => (
-                              <div key={item.id} className="text-center">
-                                <img
-                                  src={item.image_url}
-                                  alt={item.name}
-                                  className="w-full h-24 object-cover rounded-lg mb-2"
-                                />
-                                <p className="text-xs text-gray-600">
-                                  {item.name}
-                                </p>
-                              </div>
-                            ))}
-                          </div>
-                          <Button
-                            className="w-full mt-4 bg-black text-white hover:bg-gray-800"
-                            onClick={() => {
-                              // Save outfit logic would go here
-                              console.log("Save outfit:", outfit.id);
-                            }}
-                          >
-                            Save This Outfit
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
         )}
 
@@ -686,21 +612,12 @@ export default function HomePage() {
                   <CardTitle>Wardrobe Stats</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4">
                     <div className="text-center p-4 bg-gray-50 rounded-lg">
                       <div className="text-2xl font-bold text-black">
                         {wardrobeItems.length}
                       </div>
                       <div className="text-sm text-gray-600">Total Items</div>
-                    </div>
-                    <div className="text-center p-4 bg-gray-50 rounded-lg">
-                      <div className="text-2xl font-bold text-black">
-                        {
-                          wardrobeItems.filter((item) => item.is_favorite)
-                            .length
-                        }
-                      </div>
-                      <div className="text-sm text-gray-600">Favorites</div>
                     </div>
                   </div>
                 </CardContent>

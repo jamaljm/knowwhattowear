@@ -55,7 +55,7 @@ no need to be too verbose or too long or too much formatting.
     // Ensure we return only a plain string (not the complex result object)
     const textResult = String(result.text);
     console.log("textResult", textResult);
-    return "textResult";
+    return textResult;
   } catch (error) {
     console.error("Error in processImage:", error);
     throw error;
