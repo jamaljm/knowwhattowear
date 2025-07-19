@@ -25,7 +25,23 @@ export async function processImage(formData: FormData) {
           content: [
             {
               type: "text",
-              text: "Analyze this image and describe what clothing items you see in a natural, conversational way. Focus on the main clothing pieces, their colors, and any notable style details. Keep it concise and readable.",
+              text: `Given is a clothing item.
+Please analyze it carefully and describe it in a concise, precise way.
+Focus on:
+- Type of clothing (e.g., shirt, pants, dress, etc.)
+- Color of the clothing
+- Any unique features or details
+- Fabric type
+
+Please also provide a short section on
+- occassions where it can be worn
+- what it can be paired with
+
+Include any other relevant information.
+But keep it short and concise. We dont wat user to read too much
+high signal to noise ratio.
+no need to be too verbose or too long or too much formatting.
+`,
             },
             {
               type: "image",
