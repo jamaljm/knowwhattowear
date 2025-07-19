@@ -23,9 +23,9 @@ export async function searchWardrobe(userQuery: string, wardrobeItems: WardrobeI
     }
 
     // Format wardrobe items for AI
-    const wardrobeContext = wardrobeItems.map((item, index) => 
-      `Item ${index + 1}: ${item.description}`
-    ).join('\n\n');
+    const wardrobeContext = wardrobeItems.map((item) => 
+      `<item id="${item.id}">${item.description}</item>`
+    ).join('\n');
 
     console.log("About to call generateText for wardrobe search...");
 
@@ -46,9 +46,25 @@ Based on the user's wardrobe items above, provide helpful suggestions. You can:
 3. Point out what they might be missing for their desired look
 4. Give styling tips for their existing pieces
 
-Please reference items by their numbers (e.g., "Item 1", "Item 2") and be specific about how to use them. Keep your response concise but helpful.
+IMPORTANT: When referencing specific items, use XML tags with the item ID like this: <recommended-item id="item-id-here">description of how to use it</recommended-item>
 
-If no items match their request well, suggest alternatives from what they have or mention what type of item they might want to add to their wardrobe.`
+Format your response like this:
+<response>
+<suggestions>
+Your styling suggestions here...
+</suggestions>
+
+<recommended-items>
+<recommended-item id="item-id-1">How to use this item...</recommended-item>
+<recommended-item id="item-id-2">How to use this item...</recommended-item>
+</recommended-items>
+
+<missing-items>
+Items they might want to add to complete the look...
+</missing-items>
+</response>
+
+Keep your response concise but helpful.`
         }
       ]
     });
