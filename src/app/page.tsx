@@ -1,169 +1,298 @@
 "use client";
 
-import { useState } from "react";
-import { processImage } from "./action";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 
-export default function Test({}: {}) {
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [aiResponse, setAiResponse] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [notification, setNotification] = useState<{
-    title: string;
-    description: string;
-    variant: string;
-  } | null>(null);
-
-  const showNotification = (
-    title: string,
-    description: string,
-    variant: string = "default"
-  ) => {
-    setNotification({ title, description, variant });
-    setTimeout(() => setNotification(null), 5000);
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedImage(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!selectedImage) {
-      showNotification(
-        "No image selected",
-        "Please select an image to analyze",
-        "destructive"
-      );
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      console.log(
-        "Client: About to call processImage with file:",
-        selectedImage.name
-      );
-
-      const formData = new FormData();
-      formData.append("image", selectedImage);
-
-      console.log("Client: FormData created, calling processImage...");
-      const response = await processImage(formData);
-
-      console.log("Client: Response received:", response);
-      console.log("Client: Response type:", typeof response);
-      console.log("Client: Response length:", response?.length);
-
-      if (response === undefined || response === null) {
-        console.error("Client: Response is undefined or null");
-        showNotification(
-          "Error",
-          "No response received from server",
-          "destructive"
-        );
-        return;
-      }
-
-      setAiResponse(response);
-      console.log("Client: AI response set successfully");
-    } catch (error) {
-      console.error("Client: Error in handleSubmit:", error);
-      showNotification(
-        "Error",
-        "Failed to analyze image. Please try again.",
-        "destructive"
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+export default function LandingPage() {
   return (
-    <main className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold text-center mb-8">
-        AI Clothing Analyzer
-      </h1>
-
-      {/* Notification */}
-      {notification && (
-        <div
-          className={`fixed top-4 right-4 max-w-md p-4 rounded-lg shadow-lg z-50 ${
-            notification.variant === "destructive"
-              ? "bg-red-100 border border-red-400 text-red-700"
-              : "bg-green-100 border border-green-400 text-green-700"
-          }`}
-        >
-          <h3 className="font-semibold">{notification.title}</h3>
-          <p className="text-sm">{notification.description}</p>
+    <div className="min-h-screen bg-white text-black">
+      {/* Navigation */}
+      <nav className="border-b border-gray-200 px-6 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-black rounded-full"></div>
+            <span className="text-xl font-bold">KnowWhatToWear</span>
+          </div>
+          <div className="flex items-center space-x-4">
+            <Link href="/login">
+              <Button className="text-black hover:bg-gray-100">Sign In</Button>
+            </Link>
+            <Link href="/login">
+              <Button className="bg-black text-white hover:bg-gray-800">
+                Get Started
+              </Button>
+            </Link>
+          </div>
         </div>
-      )}
+      </nav>
 
-      <div className="max-w-2xl mx-auto space-y-8">
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-          <div className="space-y-4">
-            <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-gray-400 transition-colors">
-              {imagePreview ? (
-                <div className="relative w-full aspect-video">
-                  <img
-                    src={imagePreview}
-                    alt="Preview"
-                    className="rounded-lg object-contain w-full h-full"
-                  />
-                </div>
-              ) : (
-                <div className="text-center">
-                  <p className="text-gray-500">
-                    Upload an image of clothing to analyze
-                  </p>
-                </div>
-              )}
+      {/* Hero Section */}
+      <section className="px-6 py-20">
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+            Your Digital
+            <br />
+            <span className="bg-black text-white px-4 py-2 inline-block transform -rotate-1">
+              Wardrobe
+            </span>
+            <br />
+            Assistant
+          </h1>
+          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+            Upload your clothes, get AI-powered outfit recommendations, and
+            never wonder what to wear again.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link href="/login">
+              <Button className="bg-black text-white hover:bg-gray-800 px-8 py-3">
+                Start Your Wardrobe
+              </Button>
+            </Link>
+            <Button className="border-black text-black hover:bg-gray-100 px-8 py-3">
+              See How It Works
+            </Button>
+          </div>
+        </div>
+      </section>
 
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="hidden"
-                id="imageInput"
-              />
-              <label htmlFor="imageInput">
-                <span className="inline-flex items-center px-4 py-2 mt-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer">
-                  Select Image
-                </span>
-              </label>
+      {/* Features Section */}
+      <section className="px-6 py-20 bg-gray-50">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Everything you need to master your style
+            </h2>
+            <p className="text-gray-600 text-lg">
+              Powered by AI, designed for your lifestyle
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <Card className="border border-gray-200 shadow-sm">
+              <CardHeader>
+                <div className="w-12 h-12 bg-black rounded-lg mb-4 flex items-center justify-center">
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2M7 4h10M7 4l-2 16h14l-2-16"
+                    />
+                  </svg>
+                </div>
+                <CardTitle>Smart Wardrobe</CardTitle>
+                <CardDescription>
+                  Upload photos of your clothes and accessories. Our AI
+                  automatically tags them by color, type, and fabric.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="border border-gray-200 shadow-sm">
+              <CardHeader>
+                <div className="w-12 h-12 bg-black rounded-lg mb-4 flex items-center justify-center">
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                    />
+                  </svg>
+                </div>
+                <CardTitle>AI Recommendations</CardTitle>
+                <CardDescription>
+                  Get personalized outfit suggestions based on weather,
+                  occasion, and your personal style preferences.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="border border-gray-200 shadow-sm">
+              <CardHeader>
+                <div className="w-12 h-12 bg-black rounded-lg mb-4 flex items-center justify-center">
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                    />
+                  </svg>
+                </div>
+                <CardTitle>Style Insights</CardTitle>
+                <CardDescription>
+                  Track what you wear, discover your style patterns, and get
+                  insights to make better fashion choices.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="px-6 py-20">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              How it works
+            </h2>
+            <p className="text-gray-600 text-lg">
+              Three simple steps to transform your wardrobe
+            </p>
+          </div>
+
+          <div className="space-y-12">
+            <div className="flex flex-col md:flex-row items-center gap-8">
+              <div className="flex-1">
+                <Badge className="bg-black text-white mb-4">Step 1</Badge>
+                <h3 className="text-2xl font-bold mb-4">Upload Your Clothes</h3>
+                <p className="text-gray-600 text-lg">
+                  Take photos of your clothes and accessories. Our AI will
+                  automatically identify colors, types, and fabrics to organize
+                  your digital wardrobe.
+                </p>
+              </div>
+              <div className="flex-1">
+                <div className="bg-gray-100 rounded-lg p-8 h-64 flex items-center justify-center">
+                  <svg
+                    className="w-16 h-16 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2M7 4h10M7 4l-2 16h14l-2-16"
+                    />
+                  </svg>
+                </div>
+              </div>
             </div>
 
-            <button
-              onClick={handleSubmit}
-              className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={!selectedImage || isLoading}
-            >
-              {isLoading ? (
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Analyzing...
+            <div className="flex flex-col md:flex-row-reverse items-center gap-8">
+              <div className="flex-1">
+                <Badge className="bg-black text-white mb-4">Step 2</Badge>
+                <h3 className="text-2xl font-bold mb-4">Get Recommendations</h3>
+                <p className="text-gray-600 text-lg">
+                  Tell us about your day - the weather, occasion, or mood. Our
+                  AI will suggest the perfect outfit combinations from your
+                  wardrobe.
+                </p>
+              </div>
+              <div className="flex-1">
+                <div className="bg-gray-100 rounded-lg p-8 h-64 flex items-center justify-center">
+                  <svg
+                    className="w-16 h-16 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                    />
+                  </svg>
                 </div>
-              ) : (
-                "Analyze Clothing"
-              )}
-            </button>
+              </div>
+            </div>
+
+            <div className="flex flex-col md:flex-row items-center gap-8">
+              <div className="flex-1">
+                <Badge className="bg-black text-white mb-4">Step 3</Badge>
+                <h3 className="text-2xl font-bold mb-4">Look Amazing</h3>
+                <p className="text-gray-600 text-lg">
+                  Save your favorite outfits, track what you wear, and discover
+                  new style combinations you never thought of before.
+                </p>
+              </div>
+              <div className="flex-1">
+                <div className="bg-gray-100 rounded-lg p-8 h-64 flex items-center justify-center">
+                  <svg
+                    className="w-16 h-16 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+      </section>
 
-        {aiResponse && (
-          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4">Analysis Result</h2>
-            <p className="text-gray-700 whitespace-pre-wrap">{aiResponse}</p>
+      {/* CTA Section */}
+      <section className="px-6 py-20 bg-black text-white">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            Ready to revolutionize your wardrobe?
+          </h2>
+          <p className="text-gray-300 text-lg mb-8">
+            Join thousands of users who never have to wonder what to wear again.
+          </p>
+          <Link href="/login">
+            <Button className="bg-white text-black hover:bg-gray-100 px-8 py-3">
+              Get Started Free
+            </Button>
+          </Link>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-gray-200 px-6 py-8">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between">
+          <div className="flex items-center space-x-2 mb-4 md:mb-0">
+            <div className="w-6 h-6 bg-black rounded-full"></div>
+            <span className="font-bold">KnowWhatToWear</span>
           </div>
-        )}
-      </div>
-    </main>
+          <div className="flex items-center space-x-6 text-sm text-gray-600">
+            <a href="#" className="hover:text-black">
+              Privacy
+            </a>
+            <a href="#" className="hover:text-black">
+              Terms
+            </a>
+            <a href="#" className="hover:text-black">
+              Support
+            </a>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 }
