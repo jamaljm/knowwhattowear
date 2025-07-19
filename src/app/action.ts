@@ -1,12 +1,11 @@
-"use server"
+"use server";
 
 import { openai } from "@ai-sdk/openai";
 import { generateText } from "ai";
 
-
 export async function processImage(formData: FormData) {
   try {
-     const image = formData.get("image") as File;
+    const image = formData.get("image") as File;
 
     if (!image) {
       throw new Error("No image provided");
