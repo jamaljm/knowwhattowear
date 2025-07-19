@@ -16,6 +16,7 @@ import { supabase } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { CommonContext } from "@/Common_context";
 import { useContext } from "react";
+import { uploadToSupabase } from "@/utils/upload";
 
 interface WardrobeItem {
   id: string;
@@ -109,23 +110,6 @@ export default function HomePage() {
     }
   };
 
-  const uploadToSupabase = async (file: File): Promise<string> => {
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${userData.id}/${Date.now()}.${fileExt}`;
-
-    const { data, error } = await supabase.storage
-      .from("wardrobe-images")
-      .upload(fileName, file);
-
-    if (error) throw error;
-
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("wardrobe-images").getPublicUrl(fileName);
-
-    return publicUrl;
-  };
-
   const analyzeClothing = async (imageUrl: string) => {
     // This would typically call your AI service
     // For now, return mock analysis
@@ -150,7 +134,11 @@ export default function HomePage() {
     try {
       // Upload image to Supabase storage
       setUploadProgress(25);
-      const imageUrl = await uploadToSupabase(selectedImage);
+      const imageUrl = await uploadToSupabase(
+        selectedImage,
+        "wardrobe-images",
+        userData.id
+      );
 
       // Analyze with AI
       setUploadProgress(50);
