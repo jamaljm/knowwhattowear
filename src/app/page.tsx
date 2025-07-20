@@ -57,16 +57,11 @@ export default function LandingPage() {
             Upload your clothes, get AI-powered outfit recommendations, and
             never wonder what to wear again.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link href="/login">
-              <Button className="bg-black text-white hover:bg-gray-800 px-8 py-3">
-                Start Your Wardrobe
-              </Button>
-            </Link>
-            <Button className="border-black text-black hover:bg-gray-100 px-8 py-3">
-              See How It Works
+          <Link href="/login">
+            <Button className="bg-black text-white hover:bg-gray-800 px-8 py-4 text-lg rounded-full">
+              Start styling
             </Button>
-          </div>
+          </Link>
         </div>
       </section>
 

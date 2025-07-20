@@ -19,6 +19,7 @@ import { useContext } from "react";
 import { uploadToSupabase } from "@/utils/upload";
 import { processImage } from "@/components/process_image/action";
 import { searchWardrobe } from "@/components/wardrobe_search/action";
+import { parseSearchResponse, type ParsedSearchResponse } from "@/utils/parseSearchResponse";
 import ReactMarkdown from "react-markdown";
 import Image from "next/image";
 
@@ -40,7 +41,7 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResult, setSearchResult] = useState("");
+  const [searchResult, setSearchResult] = useState<ParsedSearchResponse | null>(null);
   const [editingItem, setEditingItem] = useState<WardrobeItem | null>(null);
   const [editDescription, setEditDescription] = useState("");
 
@@ -176,9 +177,10 @@ export default function HomePage() {
     setIsLoading(true);
     try {
       console.log("Starting wardrobe search...");
-      const result = await searchWardrobe(searchQuery, wardrobeItems);
-      setSearchResult(result);
-      console.log("Search completed:", result);
+      const rawResult = await searchWardrobe(searchQuery, wardrobeItems);
+      const parsedResult = parseSearchResponse(rawResult, wardrobeItems);
+      setSearchResult(parsedResult);
+      console.log("Search completed:", parsedResult);
     } catch (error) {
       console.error("Error searching wardrobe:", error);
     } finally {
@@ -348,10 +350,59 @@ export default function HomePage() {
                         </div>
                         
                         {searchResult && (
-                          <div className="mt-4 p-4 bg-gray-50 rounded-lg text-left">
-                            <div className="text-gray-800 prose prose-sm max-w-none">
-                              <ReactMarkdown>{searchResult}</ReactMarkdown>
-                            </div>
+                          <div className="mt-4 space-y-4">
+                            {/* Suggestions */}
+                            {searchResult.suggestions && (
+                              <div className="p-4 bg-gray-50 rounded-lg">
+                                <h4 className="font-medium text-gray-900 mb-2">Styling Suggestions</h4>
+                                <div className="text-gray-800 prose prose-sm max-w-none">
+                                  <ReactMarkdown>{searchResult.suggestions}</ReactMarkdown>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Recommended Items */}
+                            {searchResult.recommendedItems.length > 0 && (
+                              <div className="p-4 bg-blue-50 rounded-lg">
+                                <h4 className="font-medium text-gray-900 mb-3">Recommended Items from Your Closet</h4>
+                                <div className="grid gap-3">
+                                  {searchResult.recommendedItems.map((rec, index) => (
+                                    <div key={index} className="flex items-start gap-3 p-3 bg-white rounded-lg border">
+                                      {rec.item ? (
+                                        <>
+                                          <Image
+                                            src={rec.item.image_url}
+                                            alt={rec.item.description}
+                                            width={60}
+                                            height={60}
+                                            className="rounded-lg object-cover flex-shrink-0"
+                                          />
+                                          <div className="flex-1 min-w-0">
+                                            <p className="font-medium text-gray-900 text-sm">{rec.item.description}</p>
+                                            <p className="text-gray-600 text-sm mt-1">{rec.usage}</p>
+                                          </div>
+                                        </>
+                                      ) : (
+                                        <div className="flex-1">
+                                          <p className="text-gray-600 text-sm">Item not found (ID: {rec.id})</p>
+                                          <p className="text-gray-600 text-sm mt-1">{rec.usage}</p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Missing Items */}
+                            {searchResult.missingItems && (
+                              <div className="p-4 bg-yellow-50 rounded-lg">
+                                <h4 className="font-medium text-gray-900 mb-2">Items to Consider Adding</h4>
+                                <div className="text-gray-800 prose prose-sm max-w-none">
+                                  <ReactMarkdown>{searchResult.missingItems}</ReactMarkdown>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
