@@ -20,6 +20,7 @@ import { uploadToSupabase } from "@/utils/upload";
 import { processImage } from "@/components/process_image/action";
 import { searchWardrobe } from "@/components/wardrobe_search/action";
 import { parseSearchResponse, type ParsedSearchResponse } from "@/utils/parseSearchResponse";
+import { extractItemSummary } from "@/utils/formatItemDescription";
 import ReactMarkdown from "react-markdown";
 import Image from "next/image";
 
@@ -343,7 +344,7 @@ export default function HomePage() {
                           <Button
                             onClick={handleWardrobeSearch}
                             disabled={!searchQuery.trim() || isLoading}
-                            className="bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50 rounded-lg px-6"
+                            className="bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50 rounded-lg px-6 py-3 h-12"
                           >
                             {isLoading ? "Searching..." : "Search"}
                           </Button>
@@ -367,19 +368,21 @@ export default function HomePage() {
                                 <h4 className="font-medium text-gray-900 mb-3">Recommended Items from Your Closet</h4>
                                 <div className="grid gap-3">
                                   {searchResult.recommendedItems.map((rec, index) => (
-                                    <div key={index} className="flex items-start gap-3 p-3 bg-white rounded-lg border">
+                                    <div key={index} className="flex items-start gap-4 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
                                       {rec.item ? (
                                         <>
                                           <Image
                                             src={rec.item.image_url}
                                             alt={rec.item.description}
-                                            width={60}
-                                            height={60}
+                                            width={80}
+                                            height={80}
                                             className="rounded-lg object-cover flex-shrink-0"
                                           />
                                           <div className="flex-1 min-w-0">
-                                            <p className="font-medium text-gray-900 text-sm">{rec.item.description}</p>
-                                            <p className="text-gray-600 text-sm mt-1">{rec.usage}</p>
+                                            <h5 className="font-semibold text-gray-900 text-base mb-2">
+                                              {extractItemSummary(rec.item.description)}
+                                            </h5>
+                                            <p className="text-gray-600 text-sm leading-relaxed">{rec.usage}</p>
                                           </div>
                                         </>
                                       ) : (
@@ -397,9 +400,17 @@ export default function HomePage() {
                             {/* Missing Items */}
                             {searchResult.missingItems && (
                               <div className="p-4 bg-yellow-50 rounded-lg">
-                                <h4 className="font-medium text-gray-900 mb-2">Items to Consider Adding</h4>
-                                <div className="text-gray-800 prose prose-sm max-w-none">
-                                  <ReactMarkdown>{searchResult.missingItems}</ReactMarkdown>
+                                <h4 className="font-medium text-gray-900 mb-3">Items to Consider Adding</h4>
+                                <div className="text-left text-gray-700 leading-relaxed prose prose-sm max-w-none [&>p]:mb-2 [&>ul]:mb-2 [&>ul]:pl-4 [&>li]:mb-1">
+                                  <ReactMarkdown 
+                                    components={{
+                                      p: ({ children }) => <p className="mb-2 text-sm">{children}</p>,
+                                      ul: ({ children }) => <ul className="mb-2 pl-4 space-y-1">{children}</ul>,
+                                      li: ({ children }) => <li className="text-sm list-disc">{children}</li>
+                                    }}
+                                  >
+                                    {searchResult.missingItems}
+                                  </ReactMarkdown>
                                 </div>
                               </div>
                             )}

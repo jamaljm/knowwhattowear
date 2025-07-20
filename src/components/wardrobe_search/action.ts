@@ -47,6 +47,7 @@ Based on the user's wardrobe items above, provide helpful suggestions. You can:
 4. Give styling tips for their existing pieces
 
 IMPORTANT: When referencing specific items, use XML tags with the item ID like this: <recommended-item id="item-id-here">description of how to use it</recommended-item>
+IMPORTANT: do not give users decision fatigue. Do not suggest more than 3 items.
 
 Format your response like this:
 <response>
