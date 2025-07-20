@@ -30,7 +30,7 @@ export async function searchWardrobe(userQuery: string, wardrobeItems: WardrobeI
     console.log("About to call generateText for wardrobe search...");
 
     const result = await generateText({
-      model: openai("gpt-4o"),
+      model: openai("gpt-4.1"),
       messages: [
         {
           role: "user",

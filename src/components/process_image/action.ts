@@ -18,7 +18,7 @@ export async function processImage(formData: FormData) {
     console.log("About to call generateText...");
 
     const result = await generateText({
-      model: openai("gpt-4o"),
+    model: openai("gpt-4.1"),
       messages: [
         {
           role: "user",
