@@ -10,7 +10,7 @@ interface RecommendedItem {
   item?: WardrobeItem;
 }
 
-interface ParsedSearchResponse {
+export interface ParsedSearchResponse {
   suggestions: string;
   recommendedItems: RecommendedItem[];
   missingItems: string;
