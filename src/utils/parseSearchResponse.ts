@@ -21,14 +21,15 @@ export function parseSearchResponse(response: string, wardrobeItems: WardrobeIte
   const itemMap = new Map(wardrobeItems.map(item => [item.id, item]));
 
   // Parse suggestions
-  const suggestionsMatch = response.match(/<suggestions>(.*?)<\/suggestions>/s);
+  const suggestionsMatch = response.match(/<suggestions>([\s\S]*?)<\/suggestions>/);
   const suggestions = suggestionsMatch ? suggestionsMatch[1].trim() : '';
 
   // Parse recommended items
-  const recommendedItemMatches = response.matchAll(/<recommended-item id="([^"]+)">(.*?)<\/recommended-item>/gs);
+  const recommendedItemRegex = /<recommended-item id="([^"]+)">([\s\S]*?)<\/recommended-item>/g;
   const recommendedItems: RecommendedItem[] = [];
   
-  for (const match of recommendedItemMatches) {
+  let match;
+  while ((match = recommendedItemRegex.exec(response)) !== null) {
     const id = match[1];
     const usage = match[2].trim();
     const item = itemMap.get(id);
@@ -41,7 +42,7 @@ export function parseSearchResponse(response: string, wardrobeItems: WardrobeIte
   }
 
   // Parse missing items
-  const missingItemsMatch = response.match(/<missing-items>(.*?)<\/missing-items>/s);
+  const missingItemsMatch = response.match(/<missing-items>([\s\S]*?)<\/missing-items>/);
   const missingItems = missingItemsMatch ? missingItemsMatch[1].trim() : '';
 
   return {
